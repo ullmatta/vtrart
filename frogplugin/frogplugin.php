@@ -3,7 +3,7 @@
  * Plugin Name: Frog Plugin
  * Plugin URI: https://github.com/vtrart/vtrart
  * Description: A multi-purpose WordPress plugin with various custom features including thumbnail overlays, gallery enhancements, and more.
- * Version: 1.0.1
+ * Version: 1.0.2
  * Author: Viktor Art
  * License: GPL v2 or later
  * Text Domain: frogplugin
