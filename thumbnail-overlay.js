@@ -1,3 +1,6 @@
+
+
+
 document.addEventListener("DOMContentLoaded", () => {
   const minWidth = 1000;
   let swiperEls = null;
@@ -167,7 +170,7 @@ document.addEventListener("DOMContentLoaded", () => {
       grid.appendChild(thumb);
     });
 
-    console.log('Thumbnail cache, length:', thumbnailCache.length, thumbnailCache);
+    console.log('Thumbnail cache loaded, length:', thumbnailCache.length, thumbnailCache);
     return thumbnailCache;
   }
 
