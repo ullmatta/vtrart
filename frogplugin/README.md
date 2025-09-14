@@ -11,6 +11,28 @@ A multi-purpose WordPress plugin with various custom features for enhanced websi
 - **Responsive Design**: Only activates on screens wider than 1000px
 - **Lightbox Integration**: Works with Simply Gallery lightboxes
 
+### Slider Rewind Buttons
+- **Smart Rewind**: Automatically shows rewind button when swiper reaches the end
+- **Smooth Animation**: 600ms slide animation back to start
+- **Responsive Positioning**: Adapts to different screen sizes
+- **Video Slider Support**: Special controls for video content
+
+### Accessibility Cleanup
+- **UI Cleanup**: Removes unnecessary accessibility elements that clutter the interface
+- **Skip Link Removal**: Cleans up redundant skip-to-content links
+- **ARIA Cleanup**: Removes unnecessary ARIA landmarks
+
+### Advanced Keyboard Navigation
+- **Viewport Detection**: Only controls swiper in center of viewport
+- **Accelerating Navigation**: Hold keys to move faster through galleries
+- **Smart Focus Management**: Disables keyboard when typing in form fields
+- **Smooth Scrolling**: Smooth transitions between different swiper instances
+
+### Lightbox Integration
+- **Drag Prevention**: Prevents accidental lightbox opening during swiper drag
+- **Faster Closing**: Click anywhere on lightbox image to close
+- **Shield Overlay**: Creates invisible barrier during drag operations
+
 ## Installation
 
 1. Upload the `frogplugin` folder to `/wp-content/plugins/`

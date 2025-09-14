@@ -1,0 +1,128 @@
+document.addEventListener("DOMContentLoaded", () => {
+  const swiperEls = Array.from(document.querySelectorAll(".swiper"));
+  let activeSwiperEl = null;
+  let holdDirection = null;
+  let keyHoldTimeout = null;
+  let keyHoldInterval = null;
+  let keyHoldStart = null;
+  const initialDelay = 300; // ms before repeat starts (distinguishes tap from hold)
+  const repeatRate = 350; // ms between repeats
+  const stepIncrementEvery = 100; // ms hold time per step increase
+
+  // Disable keyboard on all swipers initially
+  swiperEls.forEach(el => {
+    const swiper = el.swiper;
+    if (swiper && swiper.params.keyboard) swiper.keyboard.disable();
+  });
+
+  function getSwiperAtViewportCenter() {
+    const viewportCenterY = window.innerHeight / 2;
+    return swiperEls.find(el => {
+      const rect = el.getBoundingClientRect();
+      const style = getComputedStyle(el);
+      const marginTop = parseFloat(style.marginTop) || 0;
+      const marginBottom = parseFloat(style.marginBottom) || 0;
+      const topWithMargin = rect.top - marginTop;
+      const bottomWithMargin = rect.bottom + marginBottom;
+
+      return viewportCenterY >= topWithMargin && viewportCenterY <= bottomWithMargin;
+    });
+  }
+
+  // Optional: debug outline
+  function highlightActiveSwiper(el) {
+    swiperEls.forEach(s => s.classList.remove('swiper-hover-debug'));
+    if (el) el.classList.add('swiper-hover-debug');
+  }
+
+  // Update active swiper based on viewport center
+  function updateActiveSwiper() {
+    const swiperEl = getSwiperAtViewportCenter();
+    if (swiperEl !== activeSwiperEl) {
+      if (activeSwiperEl) activeSwiperEl.swiper.keyboard.disable();
+      if (swiperEl) swiperEl.swiper.keyboard.enable();
+
+      activeSwiperEl = swiperEl;
+      highlightActiveSwiper(activeSwiperEl);
+    }
+  }
+
+  // Run on scroll and resize
+  window.addEventListener("scroll", updateActiveSwiper);
+  window.addEventListener("resize", updateActiveSwiper);
+  updateActiveSwiper(); // initial check
+
+  // Navigation functions
+  function navigate(direction, step = 1) {
+    if (!activeSwiperEl) return;
+    const currentIndex = swiperEls.indexOf(activeSwiperEl);
+    let targetIndex = currentIndex + (direction === 'down' ? step : -step);
+    targetIndex = Math.max(0, Math.min(targetIndex, swiperEls.length - 1));
+
+    if (targetIndex !== currentIndex) {
+      const targetSwiper = swiperEls[targetIndex];
+      targetSwiper.scrollIntoView({ behavior: "smooth", block: "center" });
+      activeSwiperEl = targetSwiper;
+      // No need to call updateActiveSwiper here; the scroll event will handle it
+    }
+  }
+
+  // Start hold repeat
+  function startKeyHold(direction) {
+    holdDirection = direction;
+    keyHoldStart = Date.now();
+
+    // Immediate action for single tap
+    navigate(direction, 1);
+
+    // Set timeout for initial delay before repeat
+    clearTimeout(keyHoldTimeout);
+    keyHoldTimeout = setTimeout(() => {
+      clearInterval(keyHoldInterval);
+      keyHoldInterval = setInterval(() => {
+        if (holdDirection) {
+          const holdDuration = Date.now() - keyHoldStart;
+          const step = Math.floor(holdDuration / stepIncrementEvery) + 1; // Accelerate: 1, then 2 after 600ms, 3 after 1200ms, etc.
+          navigate(holdDirection, step);
+        }
+      }, repeatRate);
+    }, initialDelay);
+  }
+
+  // Stop hold repeat
+  function stopKeyHold() {
+    holdDirection = null;
+    clearTimeout(keyHoldTimeout);
+    clearInterval(keyHoldInterval);
+    keyHoldStart = null;
+  }
+
+  // Global key handler
+  document.addEventListener("keydown", e => {
+    const ae = document.activeElement;
+    const isTyping =
+      ae.tagName === "INPUT" ||
+      ae.tagName === "TEXTAREA" ||
+      ae.contentEditable === "true";
+    if (isTyping) return;
+
+    if (!activeSwiperEl) return;
+
+    switch (e.key) {
+      case "ArrowUp":
+        e.preventDefault();
+        if (holdDirection !== 'up') startKeyHold('up');
+        break;
+      case "ArrowDown":
+        e.preventDefault();
+        if (holdDirection !== 'down') startKeyHold('down');
+        break;
+    }
+  });
+
+  document.addEventListener("keyup", e => {
+    if (e.key === "ArrowUp" || e.key === "ArrowDown") {
+      stopKeyHold();
+    }
+  });
+});

@@ -3,7 +3,7 @@
  * Plugin Name: Frog Plugin
  * Plugin URI: https://github.com/vtrart/vtrart
  * Description: A multi-purpose WordPress plugin with various custom features including thumbnail overlays, gallery enhancements, and more.
- * Version: 1.0.2
+ * Version: 1.1.0
  * Author: Viktor Art
  * License: GPL v2 or later
  * Text Domain: frogplugin
@@ -29,6 +29,13 @@ class FrogPlugin {
         
         // Include feature modules
         $this->include_modules();
+        
+        // Initialize modules
+        new ThumbnailOverlayModule();
+        new SliderRewindModule();
+        new AccessibilityCleanupModule();
+        new KeyboardNavigationModule();
+        new LightboxIntegrationModule();
     }
     
     public function init() {
@@ -39,7 +46,10 @@ class FrogPlugin {
     private function include_modules() {
         // Include individual feature modules
         require_once FROGPLUGIN_PLUGIN_PATH . 'modules/thumbnail-overlay.php';
-        // Add more modules here as you create them
+        require_once FROGPLUGIN_PLUGIN_PATH . 'modules/slider-rewind.php';
+        require_once FROGPLUGIN_PLUGIN_PATH . 'modules/accessibility-cleanup.php';
+        require_once FROGPLUGIN_PLUGIN_PATH . 'modules/keyboard-navigation.php';
+        require_once FROGPLUGIN_PLUGIN_PATH . 'modules/lightbox-integration.php';
     }
     
     public function enqueue_scripts() {
@@ -68,83 +78,130 @@ class FrogPlugin {
         }
         ?>
         <style>
-        /* Thumbnail Overlay Styles */
+        /* Enhanced Thumbnail Overlay Styles */
         .GR-thumbnail-overlay {
             position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            background: rgba(0, 0, 0, 0.9);
+            inset: 0;
+            background-color: rgba(0, 0, 0, 0.95);
+            display: flex;
+            justify-content: center;
+            align-items: center;
             z-index: 9999;
-            display: none;
             opacity: 0;
-            transition: opacity 0.6s ease;
+            visibility: hidden;
+            transition: opacity 0.3s ease, visibility 0.3s ease;
+            padding: 1.5vw; /* margin around edges */
         }
         
         .GR-thumbnail-overlay.GR-visible {
-            display: flex;
             opacity: 1;
+            visibility: visible;
         }
         
         .GR-thumbnail-overlay.GR-closing {
             opacity: 0;
+            visibility: hidden;
+            transition: opacity 0.6s ease, visibility 0.6s ease;
         }
         
         .GR-thumbnail-grid {
             display: grid;
-            grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
-            gap: 20px;
-            padding: 40px;
-            max-width: 1200px;
-            margin: 0 auto;
-            align-items: center;
+            /* Each square tries to be between 200px and as big as possible (1fr) */
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 12px;
+            width: 100%;
             height: 100%;
-            overflow-y: auto;
+            align-content: center; /* center grid vertically if less items */
+            padding: 50px;
         }
         
         .GR-thumbnail-grid img {
             width: 100%;
-            height: 150px;
+            aspect-ratio: 1 / 1; /* keep squares */
             object-fit: cover;
-            border-radius: 8px;
+            border-radius: 5px;
             cursor: pointer;
-            transition: transform 0.3s ease;
+            filter: grayscale(90%);
+            transition: transform 0.2s ease, box-shadow 0.2s ease, filter 0.1s ease;
         }
         
         .GR-thumbnail-grid img:hover {
-            transform: scale(1.05);
+            transform: scale(1.04);
+            filter: grayscale(0%);
+            box-shadow: 0 6px 12px rgba(0, 0, 0, 0.25);
         }
         
         .GR-thumbnail-button {
             position: fixed;
-            bottom: 30px;
-            right: 30px;
-            background: #007cba;
+            top: 10px;
+            right: 10px;
+            z-index: 10000;
+            padding: 10px 20px;
+            background-color: transparent;
             color: white;
-            border: none;
-            padding: 15px 20px;
-            border-radius: 50px;
+            border-radius: 5px;
             cursor: pointer;
-            font-size: 14px;
-            font-weight: 600;
-            z-index: 1000;
-            transition: all 0.3s ease;
-            box-shadow: 0 4px 12px rgba(0, 124, 186, 0.3);
+            width: 28px;
+            padding: 20px;
+            height: 28px;
+            font-size: 16px;
+            transition: background-color 0.2s;
+            background-image: url("/wp-content/uploads/2025/09/tg.png"); 
+            background-size: cover;
+            background-repeat: no-repeat;
+            font-size: 12px; /* Smaller text to fit */
+            line-height: 1;
+            text-align: center;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border: 31px solid transparent;
+            opacity: 0.5;
+            transform: scale(0.9);
+            transition-property: transform, opacity; 
+            transition-duration: 150ms;
         }
         
         .GR-thumbnail-button:hover {
-            background: #005a87;
-            transform: translateY(-2px);
-            box-shadow: 0 6px 16px rgba(0, 124, 186, 0.4);
+            opacity: 1;
+            transform: scale(1);
         }
         
-        .GR-thumbnail-button.GR-active {
-            background: #d63638;
+        .GR-thumbnail-button.GR-active { 
+            opacity: .8;
+            transform: scale(1);
         }
         
-        .GR-thumbnail-button.GR-active:hover {
-            background: #b32d2e;
+        /* Swiper Slide Text Styling */
+        .swiper-slide p {
+            max-width: 700px;
+        }
+        
+        @media (max-width: 768px) {
+            .swiper-slide p {
+                font-size: .8em;
+            }
+        }
+        
+        /* Video Slider Support */
+        .videoSlider .swiper-button-prev,
+        .videoSlider .swiper-button-next {
+            height: calc(100% - 70px);	
+        }
+        
+        .videoSlider .swiper-button-prev::after,
+        .videoSlider .swiper-button-next::after {
+            margin-top: 70px;
+        }
+        
+        /* Swiper Hover Debug */
+        .swiper {
+            transition-duration: 300ms;
+        }
+        
+        .swiper-hover-debug {
+            outline: 2px solid #ff0000;
+            outline-offset: 2px;
         }
         
         @media (max-width: 999px) {
@@ -175,7 +232,10 @@ class FrogPlugin {
             <h2>Active Features</h2>
             <ul>
                 <li>✅ Thumbnail Overlay for Galleries</li>
-                <li>🔄 More features coming soon...</li>
+                <li>✅ Slider Rewind Buttons</li>
+                <li>✅ Accessibility Cleanup</li>
+                <li>✅ Advanced Keyboard Navigation</li>
+                <li>✅ Lightbox Integration</li>
             </ul>
             
             <h2>Usage</h2>

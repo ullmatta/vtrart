@@ -1,0 +1,50 @@
+// since we dont have an api or acess to the simplygallery plugin we use the lightbox from
+
+let shield = null;
+
+document.addEventListener('pointerdown', e => {
+  // Only act if the event is on a swiper slide image
+  const slide = e.target.closest('.swiper-slide img');
+  if (!slide) return;
+
+  // Ignore pointerdowns inside the lightbox
+  if (e.target.closest('.pgc-rev-lb-b-content')) return;
+
+  let startX = e.clientX;
+  let startY = e.clientY;
+  let isDragging = false;
+
+  function pointerMoveHandler(ev) {
+    if (!isDragging && (Math.abs(ev.clientX - startX) > 10 || Math.abs(ev.clientY - startY) > 10)) {
+      isDragging = true;
+      // console.log('drag detected on slide image');
+
+      if (!shield) {
+        const rect = slide.getBoundingClientRect();
+        shield = document.createElement('div');
+        shield.style.position = 'fixed';
+        shield.style.top = rect.top + 'px';
+        shield.style.left = rect.left + 'px';
+        shield.style.width = rect.width + 'px';
+        shield.style.height = rect.height + 'px';
+        shield.style.zIndex = 9999;
+        shield.style.background = 'transparent';
+		shield.style.cursor = 'grabbing';
+        //shield.style.border = '2px solid red';  debug
+        document.body.appendChild(shield);
+      }
+
+      document.removeEventListener('pointermove', pointerMoveHandler);
+    }
+  }
+
+  document.addEventListener('pointermove', pointerMoveHandler);
+
+  document.addEventListener('pointerup', () => {
+    if (shield) {
+      shield.remove();
+      shield = null;
+    }
+    document.removeEventListener('pointermove', pointerMoveHandler);
+  }, { once: true });
+});

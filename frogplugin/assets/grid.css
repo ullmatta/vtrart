@@ -1,0 +1,95 @@
+.GR-thumbnail-overlay {
+  position: fixed;
+  inset: 0;
+  background-color: rgba(0, 0, 0, 0.95);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 9999;
+  opacity: 0;
+  visibility: hidden;
+  transition: opacity 0.3s ease, visibility 0.3s ease;
+  padding: 1.5vw; /* margin around edges */
+}
+
+.GR-thumbnail-overlay.GR-visible {
+  opacity: 1;
+  visibility: visible;
+}
+
+.GR-thumbnail-overlay.GR-closing {
+  opacity: 0;
+  visibility: hidden;
+  transition: opacity 0.6s ease, visibility 0.6s ease;
+}
+
+.GR-thumbnail-grid {
+  display: grid;
+  /* Each square tries to be between 200px and as big as possible (1fr) */
+grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+  gap: 12px;
+  width: 100%;
+  height: 100%;
+  align-content: center; /* center grid vertically if less items */
+		padding: 50px;
+}
+
+.GR-thumbnail-grid img {
+  width: 100%;
+  aspect-ratio: 1 / 1; /* keep squares */
+  object-fit: cover;
+  border-radius: 5px;
+  cursor: pointer;
+	filter: grayscale(90%);
+  transition: transform 0.2s ease, box-shadow 0.2s ease, filter 0.1s ease;
+	}
+
+
+.GR-thumbnail-grid img:hover {
+  transform: scale(1.04);
+	filter: grayscale(0%);
+  box-shadow: 0 6px 12px rgba(0, 0, 0, 0.25);
+}
+
+
+.GR-thumbnail-button {
+    position: fixed;
+    top: 10px;
+    right: 10px;
+    z-index: 10000;
+    padding: 10px 20px;
+background-color: transparent;
+    color: white;
+
+    border-radius: 5px;
+    cursor: pointer;
+	width: 28px;
+	padding: 20px;
+	height: 28px;
+    font-size: 16px;
+    transition: background-color 0.2s;
+    background-image: url("/wp-content/uploads/2025/09/tg.png"); 
+	background-size: cover;
+	background-repeat:no-repeat;
+	font-size: 12px; /* Smaller text to fit */
+    line-height: 1;
+    text-align: center;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+           /* background-clip: content-box;  Background only in content area */
+	border: 31px solid transparent;
+	opacity: 0.5;
+	transform: scale(0.9);
+	transition-property: transform, opacity; transition-duration: 150ms;
+}
+/*  .GR-thumbnail-button::before { content: "D"; }*/
+
+.GR-thumbnail-button:hover {
+opacity: 1;
+	transform: scale(1);
+}
+.GR-thumbnail-button.GR-active { 
+opacity: .8;
+	transform: scale(1);
+}

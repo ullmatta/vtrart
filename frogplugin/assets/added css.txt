@@ -1,0 +1,45 @@
+.swiper-slide p {
+max-width: 700px;
+}
+
+@media (max-width: 768px) {
+.swiper-slide p {
+	font-size: .8em;
+}
+}
+
+/* make gap for video bar controls - add class to whole slider */
+.videoSlider .swiper-button-prev,
+.videoSlider .swiper-button-next {
+ height: calc(100% - 70px);	
+}
+.videoSlider .swiper-button-prev::after,
+.videoSlider .swiper-button-next::after {
+margin-top:70px;
+}
+/* rewind BTN */
+.swiper-rewind-button {
+ font-size: clamp(18px, 2vw, 30px);
+	opacity: 0.5;
+	top: calc(50% - 46px);
+	right: -16px;
+	padding: 40px;
+	margin:-10px;
+	transition-duration:100ms;
+	letter-spacing: -5px;
+}
+@media (min-width: 1620px) { 
+	.swiper-rewind-button {
+	right: -73px;
+	}
+}
+.swiper-rewind-button:hover {
+	opacity: 1;
+}
+/* hovered swiper */
+.swiper {
+
+	transition-duration:300ms;
+}
+.swiper-hover-debug {
+}

@@ -1,0 +1,153 @@
+/**
+ * Plugin Name: Thumbnail Overlay
+ * Description: Adds a thumbnail overlay feature with shortcode control, disabled on mobile, with button text in CSS.
+ * Version: 1.0.7
+ */
+
+// Flag to track if shortcode is present and not mobile
+function should_load_thumbnail_overlay() {
+    global $post;
+    if (wp_is_mobile()) {
+        error_log('Thumbnail overlay skipped: Mobile device detected');
+        return false;
+    }
+    if (is_a($post, 'WP_Post') && has_shortcode($post->post_content, 'thumbnail_overlay')) {
+        return true;
+    }
+    error_log('Thumbnail overlay skipped: Shortcode not found');
+    return false;
+}
+
+// Enqueue scripts and styles only if conditions are met
+function enqueue_thumbnail_overlay_assets() {
+    if (!should_load_thumbnail_overlay()) {
+        return;
+    }
+
+    // Enqueue JavaScript
+    wp_enqueue_script(
+        'thumbnail-overlay',
+        get_template_directory_uri() . '/js/thumbnail-overlay.js',
+        ['jquery'],
+        '1.0.7',
+        true
+    );
+
+    // Pass data to JavaScript
+    wp_localize_script(
+        'thumbnail-overlay',
+        'swiperThumbs',
+        [
+            'thumbnail_size' => 'thumbnail',
+            'nonce' => wp_create_nonce('wp_rest'),
+            'rest_url' => rest_url('swiper-thumbs/v1/thumbnails'),
+        ]
+    );
+
+    // Enqueue inline CSS
+    wp_add_inline_style('wp-core', '
+        .GR-thumbnail-overlay {
+            position: fixed;
+            inset: 0;
+            background-color: rgba(0, 0, 0, 0.5);
+            display: grid;
+            place-items: center;
+            z-index: 9999;
+            opacity: 0;
+            visibility: hidden;
+            transition: opacity 0.3s ease, visibility 0.3s ease;
+        }
+        .GR-thumbnail-overlay.GR-visible {
+            opacity: 1;
+            visibility: visible;
+        }
+        .GR-thumbnail-overlay.GR-closing {
+            opacity: 0;
+            visibility: hidden;
+            transition: opacity 0.6s ease, visibility 0.6s ease;
+        }
+        .GR-thumbnail-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+            gap: 10px;
+            background-color: white;
+            padding: 20px;
+            border-radius: 10px;
+            max-width: 90vw;
+            max-height: 90vh;
+            overflow: auto;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+        }
+        .GR-thumbnail-grid img {
+            width: 100%;
+            height: auto;
+            aspect-ratio: 1;
+            object-fit: cover;
+            border-radius: 5px;
+            cursor: pointer;
+        }
+        .GR-thumbnail-button {
+            position: fixed;
+            top: 10px;
+            right: 10px;
+            z-index: 1000;
+            padding: 10px 20px;
+            background-color: #007bff;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 16px;
+            transition: background-color 0.2s;
+            line-height: 1; /* Prevent extra height from text */
+            text-align: center;
+        }
+        .GR-thumbnail-button::before {
+            content: "Show Thumbnails"; /* Define button text here */
+        }
+        .GR-thumbnail-button:hover {
+            background-color: #0056b3;
+        }
+    ');
+}
+add_action('wp_enqueue_scripts', 'enqueue_thumbnail_overlay_assets');
+
+// Register REST API endpoint
+function register_swiper_thumbs_endpoint() {
+    register_rest_route('swiper-thumbs/v1', '/thumbnails', [
+        'methods' => 'POST',
+        'callback' => 'get_swiper_thumbnail_urls',
+        'permission_callback' => function ($request) {
+            $nonce = $request->get_header('X-WP-Nonce');
+            if (!$nonce || !wp_verify_nonce($nonce, 'wp_rest')) {
+                error_log('Swiper Thumbs API: Invalid nonce');
+                return new WP_Error('rest_forbidden', 'Invalid nonce', ['status' => 403]);
+            }
+            return true;
+        },
+    ]);
+}
+add_action('rest_api_init', 'register_swiper_thumbs_endpoint');
+
+function get_swiper_thumbnail_urls($request) {
+    $attachment_ids = $request->get_param('attachment_ids') ?: [];
+    $thumbnail_size = $request->get_param('thumbnail_size') ?: 'thumbnail';
+    $thumbnail_urls = [];
+
+    foreach ($attachment_ids as $id) {
+        if (is_numeric($id)) {
+            $url = wp_get_attachment_image_url($id, $thumbnail_size);
+            if ($url) {
+                $thumbnail_urls[] = $url;
+            }
+        }
+    }
+
+    return new WP_REST_Response($thumbnail_urls, 200);
+}
+
+// Shortcode to enable the feature
+function thumbnail_overlay_shortcode() {
+    return '';
+}
+add_shortcode('thumbnail_overlay', 'thumbnail_overlay_shortcode');
